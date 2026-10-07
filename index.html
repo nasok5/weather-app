@@ -7,68 +7,79 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app">
-    <h1 class="app__title">🌤️ Погода</h1>
+  <canvas id="weather-scene"></canvas>
 
-    <!-- Переключатель единиц -->
+  <div class="app">
+    <div class="topbar">
+      <h1 class="app__title" data-i18n="app.title">🌤️ Погода</h1>
+      <div class="lang" id="lang">
+        <button type="button" class="lang__btn" data-lang="ru">RU</button>
+        <button type="button" class="lang__btn" data-lang="en">EN</button>
+      </div>
+    </div>
+
     <div class="units" id="units">
       <button type="button" class="units__btn units__btn--active" data-unit="C">°C</button>
       <button type="button" class="units__btn" data-unit="F">°F</button>
     </div>
 
-    <!-- Поиск -->
     <form class="search" id="search-form">
       <input
         type="text"
         class="search__input"
         id="search-input"
+        data-i18n-placeholder="search.placeholder"
         placeholder="Введите город..."
         autocomplete="off"
       >
-      <button type="submit" class="search__btn">Найти</button>
+      <button type="submit" class="search__btn" data-i18n="search.button">Найти</button>
     </form>
 
-    <!-- Кнопка геолокации -->
-    <button type="button" class="geo-btn" id="geo-btn">
+    <button type="button" class="geo-btn" id="geo-btn" data-i18n="geo.button">
       📍 Моё местоположение
     </button>
 
-    <!-- Карточка погоды -->
     <div class="card" id="card">
-      <div class="card__city" id="city">—</div>
+      <div class="card__head">
+        <div class="card__city" id="city">—</div>
+        <button type="button" class="card__fav" id="fav-btn" title="В избранное">☆</button>
+      </div>
       <div class="card__icon" id="icon">🌍</div>
       <div class="card__temp" id="temp">—</div>
-      <div class="card__desc" id="desc">Введите город</div>
+      <div class="card__desc" id="desc" data-i18n="card.empty">Введите город</div>
 
       <div class="card__details">
         <div class="detail">
-          <span class="detail__label">Ощущается</span>
+          <span class="detail__label" data-i18n="detail.feels">Ощущается</span>
           <span class="detail__value" id="feels">—</span>
         </div>
         <div class="detail">
-          <span class="detail__label">Влажность</span>
+          <span class="detail__label" data-i18n="detail.humidity">Влажность</span>
           <span class="detail__value" id="humidity">—</span>
         </div>
         <div class="detail">
-          <span class="detail__label">Ветер</span>
+          <span class="detail__label" data-i18n="detail.wind">Ветер</span>
           <span class="detail__value" id="wind">—</span>
         </div>
       </div>
     </div>
 
-    <!-- Почасовой прогноз -->
+    <div class="favorites" id="favorites">
+      <h2 class="favorites__title" data-i18n="fav.title">Избранные города</h2>
+      <div class="favorites__list" id="favorites-list"></div>
+    </div>
+
     <div class="hourly" id="hourly">
-      <h2 class="hourly__title">Почасовой прогноз</h2>
+      <h2 class="hourly__title" data-i18n="hourly.title">Почасовой прогноз</h2>
       <div class="hourly__list" id="hourly-list"></div>
     </div>
 
-    <!-- Прогноз на 5 дней -->
     <div class="forecast" id="forecast">
-      <h2 class="forecast__title">Прогноз на 5 дней</h2>
+      <h2 class="forecast__title" data-i18n="forecast.title">Прогноз на 5 дней</h2>
       <div class="forecast__list" id="forecast-list"></div>
     </div>
 
-    <p class="hint" id="hint">Введите город или нажмите «Моё местоположение»</p>
+    <p class="hint" id="hint" data-i18n="hint.start">Введите город или нажмите «Моё местоположение»</p>
   </div>
 
   <script src="script.js"></script>
