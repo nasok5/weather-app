@@ -12,6 +12,7 @@ const feelsEl = document.getElementById('feels');
 const humidityEl = document.getElementById('humidity');
 const windEl = document.getElementById('wind');
 
+const hourlyListEl = document.getElementById('hourly-list');
 const forecastListEl = document.getElementById('forecast-list');
 
 // ============ Словарь погодных кодов WMO ============
@@ -84,6 +85,7 @@ async function reverseGeocode(lat, lon) {
 async function fetchWeather(lat, lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
               `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code` +
+              `&hourly=temperature_2m,weather_code` +
               `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
               `&forecast_days=5` +
               `&wind_speed_unit=ms&timezone=auto`;
@@ -92,7 +94,7 @@ async function fetchWeather(lat, lon) {
   if (!res.ok) throw new Error('Ошибка получения погоды');
 
   const data = await res.json();
-  return { current: data.current, daily: data.daily };
+  return { current: data.current, hourly: data.hourly, daily: data.daily };
 }
 
 // ============ Рендер текущей погоды ============
@@ -109,7 +111,47 @@ function renderWeather({ cityName, current }) {
   windEl.textContent = `${current.wind_speed_10m.toFixed(1)} м/с`;
 }
 
-// ============ Рендер прогноза ============
+// ============ Рендер почасового прогноза ============
+function renderHourly(hourly) {
+  hourlyListEl.innerHTML = '';
+
+  // Текущее время в часах (округлённое вниз)
+  const now = new Date();
+  const currentHour = now.getHours();
+
+  // Проходим по всем часам, берём начиная с текущего и на 24 часа вперёд
+  let shown = 0;
+
+  for (let i = 0; i < hourly.time.length && shown < 24; i++) {
+    const dateStr = hourly.time[i]; // формат "2024-03-15T14:00"
+    const hour = parseInt(dateStr.slice(11, 13), 10);
+
+    // Пропускаем прошедшие часы сегодняшнего дня
+    const datePart = dateStr.slice(0, 10);
+    const todayPart = now.toISOString().slice(0, 10);
+
+    if (datePart === todayPart && hour < currentHour) continue;
+    // Пропускаем прошлые дни (на всякий случай)
+    if (datePart < todayPart) continue;
+
+    const info = getWeatherInfo(hourly.weather_code[i]);
+    const temp = Math.round(hourly.temperature_2m[i]);
+    const isNow = datePart === todayPart && hour === currentHour;
+
+    const item = document.createElement('div');
+    item.className = 'hourly__item' + (isNow ? ' hourly__item--now' : '');
+    item.innerHTML = `
+      <div class="hourly__time">${isNow ? 'Сейчас' : `${String(hour).padStart(2, '0')}:00`}</div>
+      <div class="hourly__icon">${info.icon}</div>
+      <div class="hourly__temp">${temp > 0 ? '+' : ''}${temp}°</div>
+    `;
+
+    hourlyListEl.appendChild(item);
+    shown++;
+  }
+}
+
+// ============ Рендер прогноза на 5 дней ============
 function formatDay(dateStr, index) {
   if (index === 0) return 'Сегодня';
   const date = new Date(dateStr);
@@ -141,9 +183,10 @@ function renderForecast(daily) {
 
 // ============ Общая функция загрузки по координатам ============
 async function loadByCoords(lat, lon, cityName) {
-  const { current, daily } = await fetchWeather(lat, lon);
+  const { current, hourly, daily } = await fetchWeather(lat, lon);
 
   renderWeather({ cityName, current });
+  renderHourly(hourly);
   renderForecast(daily);
 }
 
@@ -196,7 +239,6 @@ geoBtn.addEventListener('click', () => {
     (error) => {
       geoBtn.disabled = false;
 
-      // Расшифровка кодов ошибок геолокации
       const messages = {
         1: '🚫 Вы запретили доступ к геолокации',
         2: '📡 Не удалось определить местоположение',
@@ -207,7 +249,7 @@ geoBtn.addEventListener('click', () => {
     {
       enableHighAccuracy: false,
       timeout: 10000,
-      maximumAge: 60000, // кешируем позицию на 1 минуту
+      maximumAge: 60000,
     }
   );
 });

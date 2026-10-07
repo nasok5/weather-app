@@ -235,3 +235,84 @@ body {
   cursor: not-allowed;
   transform: none;
 }
+/* Почасовой прогноз */
+.hourly {
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.hourly__title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  opacity: 0.9;
+}
+
+.hourly__list {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-behavior: smooth;
+}
+
+/* Стилизация скроллбара */
+.hourly__list::-webkit-scrollbar {
+  height: 6px;
+}
+
+.hourly__list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.hourly__list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 3px;
+}
+
+.hourly__list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.hourly__item {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  min-width: 64px;
+  transition: background 0.2s;
+}
+
+.hourly__item:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.hourly__item--now {
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.hourly__time {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.hourly__icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.hourly__temp {
+  font-size: 13px;
+  font-weight: 600;
+}
