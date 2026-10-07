@@ -16,37 +16,52 @@ const windEl = document.getElementById('wind');
 const hourlyListEl = document.getElementById('hourly-list');
 const forecastListEl = document.getElementById('forecast-list');
 
-// ============ Состояние приложения ============
-let currentUnit = 'C';     // 'C' или 'F'
-let lastData = null;       // последние данные от API: { cityName, current, hourly, daily }
+// ============ Ключи localStorage ============
+const STORAGE_KEYS = {
+  city: 'weather.lastCity',
+  unit: 'weather.unit',
+};
+
+// ============ Состояние ============
+let currentUnit = localStorage.getItem(STORAGE_KEYS.unit) || 'C';
+let lastData = null;
 
 // ============ Словарь погодных кодов WMO ============
 const weatherCodes = {
-  0:  { desc: 'Ясно',                    icon: '☀️' },
-  1:  { desc: 'Преимущественно ясно',    icon: '🌤️' },
-  2:  { desc: 'Переменная облачность',   icon: '⛅' },
-  3:  { desc: 'Пасмурно',                icon: '☁️' },
-  45: { desc: 'Туман',                   icon: '🌫️' },
-  48: { desc: 'Изморозь',                icon: '🌫️' },
-  51: { desc: 'Слабая морось',           icon: '🌦️' },
-  53: { desc: 'Морось',                  icon: '🌦️' },
-  55: { desc: 'Сильная морось',          icon: '🌧️' },
-  61: { desc: 'Небольшой дождь',         icon: '🌧️' },
-  63: { desc: 'Дождь',                   icon: '🌧️' },
-  65: { desc: 'Сильный дождь',           icon: '🌧️' },
-  71: { desc: 'Небольшой снег',          icon: '🌨️' },
-  73: { desc: 'Снег',                    icon: '❄️' },
-  75: { desc: 'Сильный снег',            icon: '❄️' },
-  80: { desc: 'Ливень',                  icon: '🌦️' },
-  81: { desc: 'Сильный ливень',          icon: '🌧️' },
-  82: { desc: 'Очень сильный ливень',    icon: '⛈️' },
-  95: { desc: 'Гроза',                   icon: '⛈️' },
-  96: { desc: 'Гроза с градом',          icon: '⛈️' },
-  99: { desc: 'Сильная гроза с градом',  icon: '⛈️' },
+  0:  { desc: 'Ясно',                    icon: '☀️', group: 'clear' },
+  1:  { desc: 'Преимущественно ясно',    icon: '🌤️', group: 'clear' },
+  2:  { desc: 'Переменная облачность',   icon: '⛅',  group: 'cloudy' },
+  3:  { desc: 'Пасмурно',                icon: '☁️', group: 'cloudy' },
+  45: { desc: 'Туман',                   icon: '🌫️', group: 'fog' },
+  48: { desc: 'Изморозь',                icon: '🌫️', group: 'fog' },
+  51: { desc: 'Слабая морось',           icon: '🌦️', group: 'rain' },
+  53: { desc: 'Морось',                  icon: '🌦️', group: 'rain' },
+  55: { desc: 'Сильная морось',          icon: '🌧️', group: 'rain' },
+  61: { desc: 'Небольшой дождь',         icon: '🌧️', group: 'rain' },
+  63: { desc: 'Дождь',                   icon: '🌧️', group: 'rain' },
+  65: { desc: 'Сильный дождь',           icon: '🌧️', group: 'rain' },
+  71: { desc: 'Небольшой снег',          icon: '🌨️', group: 'snow' },
+  73: { desc: 'Снег',                    icon: '❄️', group: 'snow' },
+  75: { desc: 'Сильный снег',            icon: '❄️', group: 'snow' },
+  80: { desc: 'Ливень',                  icon: '🌦️', group: 'rain' },
+  81: { desc: 'Сильный ливень',          icon: '🌧️', group: 'rain' },
+  82: { desc: 'Очень сильный ливень',    icon: '⛈️', group: 'rain' },
+  95: { desc: 'Гроза',                   icon: '⛈️', group: 'thunder' },
+  96: { desc: 'Гроза с градом',          icon: '⛈️', group: 'thunder' },
+  99: { desc: 'Сильная гроза с градом',  icon: '⛈️', group: 'thunder' },
 };
 
 function getWeatherInfo(code) {
-  return weatherCodes[code] || { desc: 'Неизвестно', icon: '❓' };
+  return weatherCodes[code] || { desc: 'Неизвестно', icon: '❓', group: 'cloudy' };
+}
+
+// ============ Тема фона ============
+function applyTheme(weatherCode, isDay) {
+  const info = getWeatherInfo(weatherCode);
+  const timeOfDay = isDay ? 'day' : 'night';
+  const theme = `${info.group}-${timeOfDay}`;
+
+  document.body.dataset.theme = theme;
 }
 
 // ============ Конвертация температуры ============
@@ -55,7 +70,6 @@ function convertTemp(celsius) {
   return celsius;
 }
 
-// Форматирование температуры с учётом единицы и знака
 function formatTemp(celsius, withDegree = true) {
   const value = Math.round(convertTemp(celsius));
   const sign = value > 0 ? '+' : '';
@@ -63,7 +77,23 @@ function formatTemp(celsius, withDegree = true) {
   return `${sign}${value}${unit}`;
 }
 
-// ============ Геокодинг: имя → координаты ============
+// ============ localStorage ============
+function saveCity(cityName) {
+  try { localStorage.setItem(STORAGE_KEYS.city, cityName); }
+  catch (err) { console.warn('Не удалось сохранить город:', err); }
+}
+
+function getSavedCity() {
+  try { return localStorage.getItem(STORAGE_KEYS.city); }
+  catch (err) { console.warn('Не удалось прочитать город:', err); return null; }
+}
+
+function saveUnit(unit) {
+  try { localStorage.setItem(STORAGE_KEYS.unit, unit); }
+  catch (err) { console.warn('Не удалось сохранить единицу:', err); }
+}
+
+// ============ Геокодинг ============
 async function geocode(cityName) {
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=ru&format=json`;
 
@@ -71,7 +101,6 @@ async function geocode(cityName) {
   if (!res.ok) throw new Error('Ошибка геокодинга');
 
   const data = await res.json();
-
   if (!data.results || data.results.length === 0) {
     throw new Error('Город не найден');
   }
@@ -80,7 +109,6 @@ async function geocode(cityName) {
   return { lat: latitude, lon: longitude, name, country };
 }
 
-// ============ Обратный геокодинг ============
 async function reverseGeocode(lat, lon) {
   try {
     const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ru`;
@@ -100,10 +128,10 @@ async function reverseGeocode(lat, lon) {
   }
 }
 
-// ============ Прогноз: координаты → погода ============
+// ============ Запрос погоды ============
 async function fetchWeather(lat, lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-              `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code` +
+              `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day` +
               `&hourly=temperature_2m,weather_code` +
               `&daily=weather_code,temperature_2m_max,temperature_2m_min` +
               `&forecast_days=5` +
@@ -129,6 +157,9 @@ function renderWeather() {
   feelsEl.textContent = formatTemp(current.apparent_temperature);
   humidityEl.textContent = `${current.relative_humidity_2m}%`;
   windEl.textContent = `${current.wind_speed_10m.toFixed(1)} м/с`;
+
+  // Меняем тему фона
+  applyTheme(current.weather_code, current.is_day === 1);
 }
 
 // ============ Рендер почасового прогноза ============
@@ -195,7 +226,7 @@ function renderForecast() {
   });
 }
 
-// ============ Перерисовать всё ============
+// ============ Общая отрисовка ============
 function renderAll() {
   if (!lastData) return;
   renderWeather();
@@ -203,12 +234,18 @@ function renderAll() {
   renderForecast();
 }
 
-// ============ Загрузка по координатам ============
 async function loadByCoords(lat, lon, cityName) {
   const { current, hourly, daily } = await fetchWeather(lat, lon);
-
   lastData = { cityName, current, hourly, daily };
   renderAll();
+}
+
+async function loadByCityName(query, { save = true } = {}) {
+  const { lat, lon, name, country } = await geocode(query);
+  const cityName = country ? `${name}, ${country}` : name;
+
+  await loadByCoords(lat, lon, cityName);
+  if (save) saveCity(query);
 }
 
 // ============ Переключатель единиц ============
@@ -220,17 +257,16 @@ unitsEl.addEventListener('click', (e) => {
   if (unit === currentUnit) return;
 
   currentUnit = unit;
+  saveUnit(unit);
 
-  // Обновляем активную кнопку
   unitsEl.querySelectorAll('.units__btn').forEach((b) => {
     b.classList.toggle('units__btn--active', b.dataset.unit === unit);
   });
 
-  // Перерисовываем все температуры
   renderAll();
 });
 
-// ============ Обработка формы ============
+// ============ Форма поиска ============
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -243,16 +279,14 @@ form.addEventListener('submit', async (e) => {
   hint.textContent = '⏳ Загружаем...';
 
   try {
-    const { lat, lon, name, country } = await geocode(query);
-    await loadByCoords(lat, lon, country ? `${name}, ${country}` : name);
-
+    await loadByCityName(query);
     hint.textContent = '✅ Данные обновлены';
   } catch (err) {
     handleError(err);
   }
 });
 
-// ============ Обработка геолокации ============
+// ============ Геолокация ============
 geoBtn.addEventListener('click', () => {
   if (!navigator.geolocation) {
     hint.textContent = '❌ Геолокация не поддерживается браузером';
@@ -269,6 +303,7 @@ geoBtn.addEventListener('click', () => {
       try {
         const cityName = await reverseGeocode(latitude, longitude);
         await loadByCoords(latitude, longitude, cityName);
+        saveCity(`geo:${latitude},${longitude}`);
         hint.textContent = '✅ Показана погода для вашего местоположения';
       } catch (err) {
         handleError(err);
@@ -294,7 +329,7 @@ geoBtn.addEventListener('click', () => {
   );
 });
 
-// ============ Единая обработка ошибок ============
+// ============ Обработка ошибок ============
 function handleError(err) {
   console.error('Подробности:', err);
 
@@ -306,3 +341,36 @@ function handleError(err) {
     hint.textContent = `❌ Ошибка: ${err.message}`;
   }
 }
+
+// ============ Инициализация ============
+function applyUnitButton() {
+  unitsEl.querySelectorAll('.units__btn').forEach((b) => {
+    b.classList.toggle('units__btn--active', b.dataset.unit === currentUnit);
+  });
+}
+
+async function restoreLastCity() {
+  const saved = getSavedCity();
+  if (!saved) return;
+
+  hint.textContent = '⏳ Загружаем последний город...';
+
+  try {
+    if (saved.startsWith('geo:')) {
+      const [lat, lon] = saved.slice(4).split(',').map(Number);
+      const cityName = await reverseGeocode(lat, lon);
+      await loadByCoords(lat, lon, cityName);
+    } else {
+      await loadByCityName(saved, { save: false });
+    }
+
+    hint.textContent = '✅ Загружена последняя погода';
+  } catch (err) {
+    console.warn('Не удалось восстановить город:', err);
+    localStorage.removeItem(STORAGE_KEYS.city);
+    hint.textContent = '💡 Введите город или нажмите «Моё местоположение»';
+  }
+}
+
+applyUnitButton();
+restoreLastCity();

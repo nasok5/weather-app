@@ -4,15 +4,103 @@
   padding: 0;
 }
 
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ====== Базовые стили + переменные темы ====== */
 body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #4a90e2, #7ec8e3);
   color: #fff;
   padding: 20px;
+
+  /* Переменные фона — переопределяются через [data-theme] */
+  --bg-from: #4a90e2;
+  --bg-to:   #7ec8e3;
+
+  background: linear-gradient(135deg, var(--bg-from), var(--bg-to));
+  background-attachment: fixed;
+  transition: background 0.8s ease;
+}
+
+/* ====== Темы по погоде и времени суток ====== */
+
+/* Ясно — день */
+body[data-theme="clear-day"] {
+  --bg-from: #2196f3;
+  --bg-to:   #64b5f6;
+}
+
+/* Ясно — ночь */
+body[data-theme="clear-night"] {
+  --bg-from: #0f2027;
+  --bg-to:   #2c5364;
+}
+
+/* Облачно — день */
+body[data-theme="cloudy-day"] {
+  --bg-from: #78909c;
+  --bg-to:   #b0bec5;
+}
+
+/* Облачно — ночь */
+body[data-theme="cloudy-night"] {
+  --bg-from: #2c3e50;
+  --bg-to:   #4b6584;
+}
+
+/* Дождь — день */
+body[data-theme="rain-day"] {
+  --bg-from: #4b6cb7;
+  --bg-to:   #5f7a99;
+}
+
+/* Дождь — ночь */
+body[data-theme="rain-night"] {
+  --bg-from: #232526;
+  --bg-to:   #414345;
+}
+
+/* Снег — день */
+body[data-theme="snow-day"] {
+  --bg-from: #83a4d4;
+  --bg-to:   #c9d6e8;
+}
+
+/* Снег — ночь */
+body[data-theme="snow-night"] {
+  --bg-from: #3a4a5c;
+  --bg-to:   #5c6b7a;
+}
+
+/* Гроза — день */
+body[data-theme="thunder-day"] {
+  --bg-from: #232526;
+  --bg-to:   #4b5563;
+}
+
+/* Гроза — ночь */
+body[data-theme="thunder-night"] {
+  --bg-from: #0f0c29;
+  --bg-to:   #302b63;
+}
+
+/* Туман — день */
+body[data-theme="fog-day"] {
+  --bg-from: #bdc3c7;
+  --bg-to:   #8e9eab;
+}
+
+/* Туман — ночь */
+body[data-theme="fog-night"] {
+  --bg-from: #485563;
+  --bg-to:   #29323c;
 }
 
 .app {
