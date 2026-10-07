@@ -3,6 +3,7 @@ const form = document.getElementById('search-form');
 const input = document.getElementById('search-input');
 const geoBtn = document.getElementById('geo-btn');
 const hint = document.getElementById('hint');
+const unitsEl = document.getElementById('units');
 
 const cityEl = document.getElementById('city');
 const iconEl = document.getElementById('icon');
@@ -14,6 +15,10 @@ const windEl = document.getElementById('wind');
 
 const hourlyListEl = document.getElementById('hourly-list');
 const forecastListEl = document.getElementById('forecast-list');
+
+// ============ Состояние приложения ============
+let currentUnit = 'C';     // 'C' или 'F'
+let lastData = null;       // последние данные от API: { cityName, current, hourly, daily }
 
 // ============ Словарь погодных кодов WMO ============
 const weatherCodes = {
@@ -44,6 +49,20 @@ function getWeatherInfo(code) {
   return weatherCodes[code] || { desc: 'Неизвестно', icon: '❓' };
 }
 
+// ============ Конвертация температуры ============
+function convertTemp(celsius) {
+  if (currentUnit === 'F') return celsius * 9 / 5 + 32;
+  return celsius;
+}
+
+// Форматирование температуры с учётом единицы и знака
+function formatTemp(celsius, withDegree = true) {
+  const value = Math.round(convertTemp(celsius));
+  const sign = value > 0 ? '+' : '';
+  const unit = withDegree ? `°${currentUnit}` : '°';
+  return `${sign}${value}${unit}`;
+}
+
 // ============ Геокодинг: имя → координаты ============
 async function geocode(cityName) {
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=ru&format=json`;
@@ -61,7 +80,7 @@ async function geocode(cityName) {
   return { lat: latitude, lon: longitude, name, country };
 }
 
-// ============ Обратный геокодинг: координаты → название ============
+// ============ Обратный геокодинг ============
 async function reverseGeocode(lat, lon) {
   try {
     const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=ru`;
@@ -98,44 +117,40 @@ async function fetchWeather(lat, lon) {
 }
 
 // ============ Рендер текущей погоды ============
-function renderWeather({ cityName, current }) {
+function renderWeather() {
+  const { cityName, current } = lastData;
   const info = getWeatherInfo(current.weather_code);
 
   cityEl.textContent = cityName;
   iconEl.textContent = info.icon;
-  tempEl.textContent = `${Math.round(current.temperature_2m)}°C`;
+  tempEl.textContent = formatTemp(current.temperature_2m);
   descEl.textContent = info.desc;
 
-  feelsEl.textContent = `${Math.round(current.apparent_temperature)}°C`;
+  feelsEl.textContent = formatTemp(current.apparent_temperature);
   humidityEl.textContent = `${current.relative_humidity_2m}%`;
   windEl.textContent = `${current.wind_speed_10m.toFixed(1)} м/с`;
 }
 
 // ============ Рендер почасового прогноза ============
-function renderHourly(hourly) {
+function renderHourly() {
+  const { hourly } = lastData;
   hourlyListEl.innerHTML = '';
 
-  // Текущее время в часах (округлённое вниз)
   const now = new Date();
   const currentHour = now.getHours();
+  const todayPart = now.toISOString().slice(0, 10);
 
-  // Проходим по всем часам, берём начиная с текущего и на 24 часа вперёд
   let shown = 0;
 
   for (let i = 0; i < hourly.time.length && shown < 24; i++) {
-    const dateStr = hourly.time[i]; // формат "2024-03-15T14:00"
+    const dateStr = hourly.time[i];
     const hour = parseInt(dateStr.slice(11, 13), 10);
-
-    // Пропускаем прошедшие часы сегодняшнего дня
     const datePart = dateStr.slice(0, 10);
-    const todayPart = now.toISOString().slice(0, 10);
 
     if (datePart === todayPart && hour < currentHour) continue;
-    // Пропускаем прошлые дни (на всякий случай)
     if (datePart < todayPart) continue;
 
     const info = getWeatherInfo(hourly.weather_code[i]);
-    const temp = Math.round(hourly.temperature_2m[i]);
     const isNow = datePart === todayPart && hour === currentHour;
 
     const item = document.createElement('div');
@@ -143,7 +158,7 @@ function renderHourly(hourly) {
     item.innerHTML = `
       <div class="hourly__time">${isNow ? 'Сейчас' : `${String(hour).padStart(2, '0')}:00`}</div>
       <div class="hourly__icon">${info.icon}</div>
-      <div class="hourly__temp">${temp > 0 ? '+' : ''}${temp}°</div>
+      <div class="hourly__temp">${formatTemp(hourly.temperature_2m[i], false)}</div>
     `;
 
     hourlyListEl.appendChild(item);
@@ -159,13 +174,12 @@ function formatDay(dateStr, index) {
   return days[date.getDay()];
 }
 
-function renderForecast(daily) {
+function renderForecast() {
+  const { daily } = lastData;
   forecastListEl.innerHTML = '';
 
   daily.time.forEach((dateStr, i) => {
     const info = getWeatherInfo(daily.weather_code[i]);
-    const max = Math.round(daily.temperature_2m_max[i]);
-    const min = Math.round(daily.temperature_2m_min[i]);
 
     const dayEl = document.createElement('div');
     dayEl.className = 'forecast__day';
@@ -173,22 +187,48 @@ function renderForecast(daily) {
       <div class="forecast__name">${formatDay(dateStr, i)}</div>
       <div class="forecast__icon">${info.icon}</div>
       <div class="forecast__temp">
-        <div class="forecast__temp-max">${max > 0 ? '+' : ''}${max}°</div>
-        <div class="forecast__temp-min">${min > 0 ? '+' : ''}${min}°</div>
+        <div class="forecast__temp-max">${formatTemp(daily.temperature_2m_max[i], false)}</div>
+        <div class="forecast__temp-min">${formatTemp(daily.temperature_2m_min[i], false)}</div>
       </div>
     `;
     forecastListEl.appendChild(dayEl);
   });
 }
 
-// ============ Общая функция загрузки по координатам ============
+// ============ Перерисовать всё ============
+function renderAll() {
+  if (!lastData) return;
+  renderWeather();
+  renderHourly();
+  renderForecast();
+}
+
+// ============ Загрузка по координатам ============
 async function loadByCoords(lat, lon, cityName) {
   const { current, hourly, daily } = await fetchWeather(lat, lon);
 
-  renderWeather({ cityName, current });
-  renderHourly(hourly);
-  renderForecast(daily);
+  lastData = { cityName, current, hourly, daily };
+  renderAll();
 }
+
+// ============ Переключатель единиц ============
+unitsEl.addEventListener('click', (e) => {
+  const btn = e.target.closest('.units__btn');
+  if (!btn) return;
+
+  const unit = btn.dataset.unit;
+  if (unit === currentUnit) return;
+
+  currentUnit = unit;
+
+  // Обновляем активную кнопку
+  unitsEl.querySelectorAll('.units__btn').forEach((b) => {
+    b.classList.toggle('units__btn--active', b.dataset.unit === unit);
+  });
+
+  // Перерисовываем все температуры
+  renderAll();
+});
 
 // ============ Обработка формы ============
 form.addEventListener('submit', async (e) => {
