@@ -1126,13 +1126,7 @@ function updateRadarFrame() {
   if (!radarMap || radarFrames.length === 0) return;
 
   const frame = radarFrames[radarFrameIndex];
-  if (currentZoom > 7) {
-    if (radarTileLayer) {
-      radarMap.removeLayer(radarTileLayer);
-      radarTileLayer = null;
-    }
-    return;
-  }
+  
   if (radarTileLayer) {
     radarMap.removeLayer(radarTileLayer);
   }
