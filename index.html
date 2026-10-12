@@ -34,7 +34,6 @@
 
     <!-- Поиск -->
     <form class="search" id="search-form">
-      <div class="suggestions" id="suggestions"></div>
       <input
         type="text"
         class="search__input"
@@ -44,7 +43,19 @@
         autocomplete="off"
       >
       <button type="submit" class="search__btn" data-i18n="search.button">Найти</button>
+
+      <!-- Выпадающие подсказки -->
+      <div class="suggestions" id="suggestions"></div>
     </form>
+
+    <!-- История поиска -->
+    <div class="history" id="history">
+      <div class="history__header">
+        <span class="history__title" data-i18n="history.title">Вы уже искали:</span>
+        <button type="button" class="history__clear" id="history-clear" data-i18n="history.clear">Очистить</button>
+      </div>
+      <div class="history__list" id="history-list"></div>
+    </div>
 
     <!-- Кнопка геолокации -->
     <button type="button" class="geo-btn" id="geo-btn" data-i18n="geo.button">

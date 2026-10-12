@@ -92,6 +92,8 @@ const translations = {
     'day.today': 'Сегодня',
     'day.now': 'Сейчас',
     'day.weekdays': ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'],
+    'history.title': 'Вы уже искали:',
+    'history.clear': 'Очистить',
   },
   en: {
     'app.title': '🌤️ Weather',
@@ -149,6 +151,8 @@ const translations = {
     'day.today': 'Today',
     'day.now': 'Now',
     'day.weekdays': ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    'history.title': 'Recent searches:',
+    'history.clear': 'Clear',
   },
 };
 
@@ -221,6 +225,12 @@ function showSuggestions(results) {
       hideSuggestions();
       loadByCoords(r.latitude, r.longitude, cityName);
       saveCity(r.name);
+      addToHistory({
+        name: r.name,
+        lat: r.latitude,
+        lon: r.longitude,
+        displayName: cityName, // "Мурманск, Россия"
+      });
       hint.textContent = t('hint.updated');
     });
     suggestionsEl.appendChild(item);
@@ -818,6 +828,74 @@ function renderFavorites() {
     favoritesListEl.appendChild(chip);
   });
 }
+// ============================================================
+// ==================== ИСТОРИЯ ПОИСКА ========================
+// ============================================================
+const HISTORY_KEY = 'weather.history';
+const HISTORY_MAX = 5; // максимум записей
+
+const historyBlock = document.getElementById('history');
+const historyListEl = document.getElementById('history-list');
+const historyClearBtn = document.getElementById('history-clear');
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveHistory(list) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); }
+  catch (err) { console.warn('Не удалось сохранить историю:', err); }
+}
+
+function addToHistory(city) {
+  // city = { name, lat, lon, displayName }
+  let list = loadHistory();
+
+  // Убираем дубликат по displayName (или по name)
+  list = list.filter((c) => c.displayName !== city.displayName);
+
+  // Добавляем в начало
+  list.unshift(city);
+
+  // Обрезаем до HISTORY_MAX
+  if (list.length > HISTORY_MAX) list = list.slice(0, HISTORY_MAX);
+
+  saveHistory(list);
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = loadHistory();
+
+  if (list.length === 0) {
+    historyBlock.classList.add('history--hidden');
+    return;
+  }
+
+  historyBlock.classList.remove('history--hidden');
+  historyListEl.innerHTML = '';
+
+  list.forEach((city) => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'history-chip';
+    chip.textContent = city.displayName;
+    chip.addEventListener('click', () => {
+      loadByCoords(city.lat, city.lon, city.displayName);
+      saveCity(city.name);
+      hint.textContent = t('hint.updated');
+    });
+    historyListEl.appendChild(chip);
+  });
+}
+
+historyClearBtn.addEventListener('click', () => {
+  saveHistory([]);
+  renderHistory();
+});
 
 // ============================================================
 // ==================== ГЕОКОДИНГ =============================
@@ -1077,6 +1155,15 @@ form.addEventListener('submit', async (e) => {
     const cityName = r.country ? `${r.name}, ${r.country}` : r.name;
     await loadByCoords(r.latitude, r.longitude, cityName);
     saveCity(r.name);
+    await loadByCoords(r.latitude, r.longitude, cityName);
+    saveCity(r.name);
+    addToHistory({
+      name: r.name,
+      lat: r.latitude,
+      lon: r.longitude,
+      displayName: cityName,
+    });
+    hint.textContent = t('hint.updated');
     hint.textContent = t('hint.updated');
   } catch (err) {
     handleError(err);
@@ -1290,6 +1377,7 @@ async function restoreLastCity() {
 applyTranslations();
 applyUnitButton();
 renderFavorites();
+renderHistory();
 
 initRadarMap();
 loadRadarFrames();
