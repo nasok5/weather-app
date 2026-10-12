@@ -1206,6 +1206,7 @@ function updateRadarFrame() {
     opacity: 0.65,
     transparent: true,
     attribution: 'Radar © RainViewer',
+    maxZoom: 7,
   }).addTo(radarMap);
 
   const d = new Date(frame.time * 1000);
