@@ -487,3 +487,97 @@ body[data-theme="fog-night"]    { --bg-from: #485563; --bg-to: #29323c; }
 @media (max-width: 420px) {
   .forecast__list { grid-template-columns: repeat(5, minmax(60px, 1fr)); overflow-x: auto; }
 }
+/* Карта осадков */
+.radar {
+  margin-top: 16px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.radar__title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  opacity: 0.9;
+}
+
+.radar__map {
+  width: 100%;
+  height: 320px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #1a1a2e;
+}
+
+/* Стилизация Leaflet под нашу палитру */
+.radar__map .leaflet-container {
+  background: #1a1a2e;
+  font-family: inherit;
+}
+
+.radar__map .leaflet-control-attribution {
+  background: rgba(0, 0, 0, 0.6) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 10px;
+}
+
+.radar__map .leaflet-control-attribution a {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.radar__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.radar__btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar__btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.08);
+}
+
+.radar__btn--play {
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+}
+
+.radar__time {
+  font-size: 13px;
+  opacity: 0.8;
+  min-width: 80px;
+  text-align: center;
+  margin-left: 8px;
+}
+
+.radar__attribution {
+  text-align: center;
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 10px;
+}
+
+.radar__attribution a {
+  color: inherit;
+}

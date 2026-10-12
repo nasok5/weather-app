@@ -1,4 +1,6 @@
-// ============ Ссылки на элементы ============
+// ============================================================
+// ==================== ССЫЛКИ НА ЭЛЕМЕНТЫ ===================
+// ============================================================
 const form = document.getElementById('search-form');
 const input = document.getElementById('search-input');
 const geoBtn = document.getElementById('geo-btn');
@@ -20,7 +22,9 @@ const favoritesListEl = document.getElementById('favorites-list');
 const hourlyListEl = document.getElementById('hourly-list');
 const forecastListEl = document.getElementById('forecast-list');
 
-// ============ Ключи localStorage ============
+// ============================================================
+// ==================== КЛЮЧИ localStorage ====================
+// ============================================================
 const STORAGE_KEYS = {
   city: 'weather.lastCity',
   unit: 'weather.unit',
@@ -28,7 +32,9 @@ const STORAGE_KEYS = {
   favorites: 'weather.favorites',
 };
 
-// ============ Словари переводов ============
+// ============================================================
+// ==================== СЛОВАРИ ПЕРЕВОДОВ =====================
+// ============================================================
 const translations = {
   ru: {
     'app.title': '🌤️ Погода',
@@ -44,6 +50,7 @@ const translations = {
     'fav.addTitle': 'Добавить в избранное',
     'hourly.title': 'Почасовой прогноз',
     'forecast.title': 'Прогноз на 5 дней',
+    'radar.title': 'Карта осадков',
     'hint.start': 'Введите город или нажмите «Моё местоположение»',
     'hint.loading': '⏳ Загружаем...',
     'hint.restore': '⏳ Загружаем последний город...',
@@ -100,6 +107,7 @@ const translations = {
     'fav.addTitle': 'Add to favorites',
     'hourly.title': 'Hourly forecast',
     'forecast.title': '5-day forecast',
+    'radar.title': 'Precipitation map',
     'hint.start': 'Enter a city or click "My location"',
     'hint.loading': '⏳ Loading...',
     'hint.restore': '⏳ Loading last city...',
@@ -144,7 +152,9 @@ const translations = {
   },
 };
 
-// ============ Состояние ============
+// ============================================================
+// ==================== СОСТОЯНИЕ ПРИЛОЖЕНИЯ ==================
+// ============================================================
 let currentUnit = localStorage.getItem(STORAGE_KEYS.unit) || 'C';
 let currentLang = localStorage.getItem(STORAGE_KEYS.lang) || detectLang();
 let lastData = null;
@@ -158,7 +168,9 @@ function t(key) {
   return translations[currentLang][key] ?? translations.ru[key] ?? key;
 }
 
-// ============ Применение переводов ============
+// ============================================================
+// ==================== ПРИМЕНЕНИЕ ПЕРЕВОДОВ ==================
+// ============================================================
 function applyTranslations() {
   document.documentElement.lang = currentLang;
 
@@ -177,7 +189,9 @@ function applyTranslations() {
   document.title = t('app.title').replace(/^[^\p{L}]+/u, '').trim();
 }
 
-// ============ Словарь WMO-кодов ============
+// ============================================================
+// ==================== СЛОВАРЬ WMO-КОДОВ =====================
+// ============================================================
 const weatherCodes = {
   0:  { key: 'desc.clear',                 icon: '☀️', group: 'clear' },
   1:  { key: 'desc.mostlyClear',           icon: '🌤️', group: 'clear' },
@@ -207,16 +221,16 @@ function getWeatherInfo(code) {
 }
 
 // ============================================================
-// ==================== CANVAS-АНИМАЦИЯ ======================
+// ==================== CANVAS НА ГЛАВНОЙ =====================
 // ============================================================
 const canvas = document.getElementById('weather-scene');
 const ctx = canvas.getContext('2d');
 
-let animationId = null;      // id requestAnimationFrame
-let currentScene = null;     // текущая группа сцены ('rain', 'snow'...)
-let particles = [];          // массив частиц
-let lightningTimer = 0;      // таймер до следующей вспышки
-let lightningFlash = 0;      // текущая яркость вспышки (0..1)
+let animationId = null;
+let currentScene = null;
+let particles = [];
+let lightningTimer = 0;
+let lightningFlash = 0;
 
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
@@ -238,7 +252,7 @@ function makeRaindrop() {
     len: 10 + Math.random() * 12,
     speed: 6 + Math.random() * 6,
     opacity: 0.2 + Math.random() * 0.3,
-    drift: 0.4 + Math.random() * 0.6, // лёгкий наклон
+    drift: 0.4 + Math.random() * 0.6,
   };
 }
 
@@ -250,7 +264,7 @@ function makeSnowflake() {
     y: Math.random() * H,
     r: 1 + Math.random() * 2.5,
     speed: 0.6 + Math.random() * 1.4,
-    sway: Math.random() * Math.PI * 2,   // начальная фаза
+    sway: Math.random() * Math.PI * 2,
     swaySpeed: 0.005 + Math.random() * 0.01,
     opacity: 0.5 + Math.random() * 0.4,
   };
@@ -292,7 +306,7 @@ function makeStar() {
   };
 }
 
-// --- Инициализация сцены по группе ---
+// --- Инициализация сцены ---
 function initScene(group, isDay) {
   const W = window.innerWidth;
   const H = window.innerHeight;
@@ -301,10 +315,8 @@ function initScene(group, isDay) {
 
   if (group === 'clear') {
     if (!isDay) {
-      // Ночью — звёзды
       for (let i = 0; i < 90; i++) particles.push(makeStar());
     }
-    // Днём — пусто
   } else if (group === 'cloudy') {
     for (let i = 0; i < 6; i++) particles.push(makeCloud());
   } else if (group === 'fog') {
@@ -320,13 +332,13 @@ function initScene(group, isDay) {
     const count = Math.floor((W * H) / 10000);
     for (let i = 0; i < count; i++) particles.push(makeRaindrop());
     for (let i = 0; i < 4; i++) particles.push(makeCloud());
-    lightningTimer = 120 + Math.random() * 240; // 2–6 секунд при 60 fps
+    lightningTimer = 120 + Math.random() * 240;
   }
 
   currentScene = group;
 }
 
-// --- Отрисовка ---
+// --- Отрисовка главной сцены ---
 function drawScene() {
   const W = window.innerWidth;
   const H = window.innerHeight;
@@ -334,7 +346,7 @@ function drawScene() {
   ctx.clearRect(0, 0, W, H);
 
   for (const p of particles) {
-    // === Звёзды ===
+    // Звёзды
     if (p.twinkle !== undefined && p.r < 2) {
       p.twinkle += p.twinkleSpeed;
       const tw = 0.6 + Math.sin(p.twinkle) * 0.4;
@@ -345,7 +357,7 @@ function drawScene() {
       continue;
     }
 
-    // === Снежинки ===
+    // Снежинки
     if (p.sway !== undefined) {
       p.sway += p.swaySpeed;
       p.y += p.speed;
@@ -362,7 +374,7 @@ function drawScene() {
       continue;
     }
 
-    // === Дождь ===
+    // Дождь
     if (p.len !== undefined) {
       p.y += p.speed;
       p.x += p.drift;
@@ -379,12 +391,11 @@ function drawScene() {
       continue;
     }
 
-    // === Облака ===
+    // Облака
     if (p.r >= 40 && p.speed < 0.5 && p.swaySpeed === undefined && p.len === undefined && p.twinkle === undefined && p.sway === undefined) {
       p.x += p.speed;
       if (p.x - p.r > W) p.x = -p.r;
 
-      // Радиальный градиент для мягкого облака
       const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
       grad.addColorStop(0, `rgba(255, 255, 255, ${p.opacity})`);
       grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -395,7 +406,7 @@ function drawScene() {
       continue;
     }
 
-    // === Туман ===
+    // Туман
     if (p.r >= 80) {
       p.x += p.speed;
       if (p.x - p.r > W) p.x = -p.r;
@@ -411,18 +422,16 @@ function drawScene() {
     }
   }
 
-  // === Молния ===
+  // Молния на главной
   if (currentScene === 'thunder') {
     if (lightningTimer > 0) {
       lightningTimer--;
     } else {
-      // Запускаем вспышку
       lightningFlash = 1;
-      lightningTimer = 180 + Math.random() * 420; // 3–10 секунд
+      lightningTimer = 180 + Math.random() * 420;
     }
 
     if (lightningFlash > 0) {
-      // Двойной удар: ярко → затухание
       if (Math.random() < 0.35) {
         ctx.fillStyle = `rgba(255, 255, 255, ${lightningFlash * 0.35})`;
         ctx.fillRect(0, 0, W, H);
@@ -433,14 +442,12 @@ function drawScene() {
   }
 }
 
-// --- Цикл ---
 function animationLoop() {
   drawScene();
   animationId = requestAnimationFrame(animationLoop);
 }
 
 function setScene(group, isDay) {
-  // Если та же группа и день/ночь — не перезапускаем (сохраняем частицы)
   const sceneKey = `${group}-${isDay ? 'day' : 'night'}`;
   if (currentScene === sceneKey) return;
 
@@ -456,7 +463,6 @@ function startAnimation(group, isDay) {
   animationLoop();
 }
 
-// Пауза анимации, если вкладка неактивна — экономим батарею
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     if (animationId) {
@@ -469,21 +475,188 @@ document.addEventListener('visibilitychange', () => {
     }
   }
 });
-// ============================================================
-// ================== КОНЕЦ CANVAS-АНИМАЦИИ ===================
-// ============================================================
 
-// ============ Тема фона ============
+// ============================================================
+// ============ CANVAS ВНУТРИ КАРТОЧКИ ========================
+// ============================================================
+const cardCanvas = document.getElementById('card-weather');
+const cardCtx = cardCanvas.getContext('2d');
+
+let cardAnimationId = null;
+let cardScene = null;
+let cardParticles = [];
+let cardLightningTimer = 0;
+let cardLightningFlash = 0;
+
+function resizeCardCanvas() {
+  const rect = cardCanvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  cardCanvas.width = rect.width * dpr;
+  cardCanvas.height = rect.height * dpr;
+  cardCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function makeCardRaindrop(W, H) {
+  return {
+    x: Math.random() * W,
+    y: Math.random() * H,
+    len: 6 + Math.random() * 8,
+    speed: 3 + Math.random() * 3,
+    opacity: 0.15 + Math.random() * 0.25,
+    drift: 0.3 + Math.random() * 0.4,
+  };
+}
+
+function makeCardSnowflake(W, H) {
+  return {
+    x: Math.random() * W,
+    y: Math.random() * H,
+    r: 0.8 + Math.random() * 1.5,
+    speed: 0.3 + Math.random() * 0.6,
+    sway: Math.random() * Math.PI * 2,
+    swaySpeed: 0.005 + Math.random() * 0.008,
+    opacity: 0.4 + Math.random() * 0.3,
+  };
+}
+
+function initCardScene(group) {
+  const rect = cardCanvas.getBoundingClientRect();
+  const W = rect.width;
+  const H = rect.height;
+  cardParticles = [];
+  cardLightningFlash = 0;
+
+  if (group === 'rain') {
+    const count = Math.floor((W * H) / 4000);
+    for (let i = 0; i < count; i++) cardParticles.push(makeCardRaindrop(W, H));
+  } else if (group === 'snow') {
+    const count = Math.floor((W * H) / 6000);
+    for (let i = 0; i < count; i++) cardParticles.push(makeCardSnowflake(W, H));
+  } else if (group === 'thunder') {
+    const count = Math.floor((W * H) / 3500);
+    for (let i = 0; i < count; i++) cardParticles.push(makeCardRaindrop(W, H));
+    cardLightningTimer = 90 + Math.random() * 180;
+  }
+}
+
+function drawCardScene() {
+  const rect = cardCanvas.getBoundingClientRect();
+  const W = rect.width;
+  const H = rect.height;
+
+  cardCtx.clearRect(0, 0, W, H);
+
+  for (const p of cardParticles) {
+    if (p.sway !== undefined) {
+      p.sway += p.swaySpeed;
+      p.y += p.speed;
+      p.x += Math.sin(p.sway) * 0.4;
+
+      if (p.y > H + 3) { p.y = -3; p.x = Math.random() * W; }
+      if (p.x > W + 3) p.x = -3;
+      if (p.x < -3) p.x = W + 3;
+
+      cardCtx.fillStyle = `rgba(255, 255, 255, ${p.opacity})`;
+      cardCtx.beginPath();
+      cardCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      cardCtx.fill();
+      continue;
+    }
+
+    if (p.len !== undefined) {
+      p.y += p.speed;
+      p.x += p.drift;
+
+      if (p.y > H + 10) { p.y = -10; p.x = Math.random() * W; }
+      if (p.x > W + 10) p.x = -10;
+
+      cardCtx.strokeStyle = `rgba(220, 235, 255, ${p.opacity})`;
+      cardCtx.lineWidth = 1;
+      cardCtx.beginPath();
+      cardCtx.moveTo(p.x, p.y);
+      cardCtx.lineTo(p.x - p.drift * 3, p.y - p.len);
+      cardCtx.stroke();
+    }
+  }
+
+  if (cardScene === 'thunder') {
+    if (cardLightningTimer > 0) {
+      cardLightningTimer--;
+    } else {
+      cardLightningFlash = 1;
+      cardLightningTimer = 120 + Math.random() * 240;
+    }
+
+    if (cardLightningFlash > 0) {
+      cardCtx.fillStyle = `rgba(255, 255, 255, ${cardLightningFlash * 0.25})`;
+      cardCtx.fillRect(0, 0, W, H);
+      cardLightningFlash *= 0.82;
+      if (cardLightningFlash < 0.02) cardLightningFlash = 0;
+    }
+  }
+}
+
+function cardAnimationLoop() {
+  drawCardScene();
+  cardAnimationId = requestAnimationFrame(cardAnimationLoop);
+}
+
+function setCardScene(group) {
+  if (cardScene === group) return;
+
+  cardScene = group;
+  resizeCardCanvas();
+  initCardScene(group);
+}
+
+function startCardAnimation(group) {
+  if (cardAnimationId) cancelAnimationFrame(cardAnimationId);
+
+  if (!['rain', 'thunder', 'snow'].includes(group)) {
+    cardScene = null;
+    cardParticles = [];
+    cardCtx.clearRect(0, 0, cardCanvas.width, cardCanvas.height);
+    return;
+  }
+
+  setCardScene(group);
+  cardAnimationLoop();
+}
+
+window.addEventListener('resize', () => {
+  if (cardScene) {
+    resizeCardCanvas();
+    initCardScene(cardScene);
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (cardAnimationId) {
+      cancelAnimationFrame(cardAnimationId);
+      cardAnimationId = null;
+    }
+  } else if (cardScene) {
+    cardAnimationLoop();
+  }
+});
+
+// ============================================================
+// ==================== ТЕМА ФОНА =============================
+// ============================================================
 function applyTheme(weatherCode, isDay) {
   const info = getWeatherInfo(weatherCode);
   const timeOfDay = isDay ? 'day' : 'night';
   document.body.dataset.theme = `${info.group}-${timeOfDay}`;
 
-  // Запускаем/меняем анимацию
   startAnimation(info.group, isDay);
+  startCardAnimation(info.group);
 }
 
-// ============ Конвертация температур ============
+// ============================================================
+// ==================== ТЕМПЕРАТУРЫ ===========================
+// ============================================================
 function convertTemp(celsius) {
   return currentUnit === 'F' ? celsius * 9 / 5 + 32 : celsius;
 }
@@ -495,7 +668,9 @@ function formatTemp(celsius, withDegree = true) {
   return `${sign}${value}${unit}`;
 }
 
-// ============ localStorage — город и единица ============
+// ============================================================
+// ==================== localStorage ==========================
+// ============================================================
 function saveCity(cityName) {
   try { localStorage.setItem(STORAGE_KEYS.city, cityName); }
   catch (err) { console.warn('Не удалось сохранить город:', err); }
@@ -513,7 +688,9 @@ function saveLang(lang) {
   catch (err) { console.warn(err); }
 }
 
-// ============ Избранные ============
+// ============================================================
+// ==================== ИЗБРАННЫЕ =============================
+// ============================================================
 function loadFavorites() {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.favorites);
@@ -531,7 +708,7 @@ function isFavorite(name) {
 }
 
 function toggleFavorite(city) {
-  let list = loadFavorites();
+  const list = loadFavorites();
   const idx = list.findIndex((c) => c.name === city.name);
   if (idx >= 0) list.splice(idx, 1);
   else list.push(city);
@@ -586,7 +763,9 @@ function renderFavorites() {
   });
 }
 
-// ============ Геокодинг ============
+// ============================================================
+// ==================== ГЕОКОДИНГ =============================
+// ============================================================
 async function geocode(cityName) {
   const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=${currentLang}&format=json`;
 
@@ -623,7 +802,9 @@ async function reverseGeocode(lat, lon) {
   }
 }
 
-// ============ Запрос погоды ============
+// ============================================================
+// ==================== ЗАПРОС ПОГОДЫ =========================
+// ============================================================
 async function fetchWeather(lat, lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
               `&current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code,is_day` +
@@ -639,7 +820,9 @@ async function fetchWeather(lat, lon) {
   return { current: data.current, hourly: data.hourly, daily: data.daily };
 }
 
-// ============ Рендер текущей погоды ============
+// ============================================================
+// ==================== РЕНДЕР ================================
+// ============================================================
 function renderWeather() {
   const { cityName, current } = lastData;
   const info = getWeatherInfo(current.weather_code);
@@ -657,7 +840,6 @@ function renderWeather() {
   updateFavButton();
 }
 
-// ============ Рендер почасового прогноза ============
 function renderHourly() {
   const { hourly } = lastData;
   hourlyListEl.innerHTML = '';
@@ -692,7 +874,6 @@ function renderHourly() {
   }
 }
 
-// ============ Рендер прогноза на 5 дней ============
 function formatDay(dateStr, index) {
   if (index === 0) return t('day.today');
   const date = new Date(dateStr);
@@ -720,7 +901,6 @@ function renderForecast() {
   });
 }
 
-// ============ Общая перерисовка ============
 function renderAll() {
   if (!lastData) return;
   renderWeather();
@@ -728,10 +908,15 @@ function renderAll() {
   renderForecast();
 }
 
+// ============================================================
+// ==================== ЗАГРУЗКА ==============================
+// ============================================================
 async function loadByCoords(lat, lon, cityName) {
   const { current, hourly, daily } = await fetchWeather(lat, lon);
   lastData = { cityName, lat, lon, current, hourly, daily };
   renderAll();
+
+  moveRadarTo(lat, lon);
 }
 
 async function loadByCityName(query, { save = true } = {}) {
@@ -742,7 +927,9 @@ async function loadByCityName(query, { save = true } = {}) {
   if (save) saveCity(query);
 }
 
-// ============ Переключатель единиц ============
+// ============================================================
+// ==================== ПЕРЕКЛЮЧАТЕЛИ ========================
+// ============================================================
 unitsEl.addEventListener('click', (e) => {
   const btn = e.target.closest('.units__btn');
   if (!btn) return;
@@ -760,7 +947,6 @@ unitsEl.addEventListener('click', (e) => {
   renderAll();
 });
 
-// ============ Переключатель языка ============
 langEl.addEventListener('click', async (e) => {
   const btn = e.target.closest('.lang__btn');
   if (!btn) return;
@@ -792,7 +978,9 @@ langEl.addEventListener('click', async (e) => {
   }
 });
 
-// ============ Кнопка «В избранное» ============
+// ============================================================
+// ==================== КНОПКА ИЗБРАННОГО ====================
+// ============================================================
 favBtn.addEventListener('click', () => {
   if (!lastData) return;
   toggleFavorite({
@@ -802,7 +990,9 @@ favBtn.addEventListener('click', () => {
   });
 });
 
-// ============ Форма поиска ============
+// ============================================================
+// ==================== ФОРМА ПОИСКА =========================
+// ============================================================
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -822,7 +1012,9 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// ============ Геолокация ============
+// ============================================================
+// ==================== ГЕОЛОКАЦИЯ ===========================
+// ============================================================
 geoBtn.addEventListener('click', () => {
   if (!navigator.geolocation) {
     hint.textContent = t('hint.geoUnsupported');
@@ -864,7 +1056,9 @@ geoBtn.addEventListener('click', () => {
   );
 });
 
-// ============ Обработка ошибок ============
+// ============================================================
+// ==================== ОБРАБОТКА ОШИБОК =====================
+// ============================================================
 function handleError(err) {
   console.error('Подробности:', err);
 
@@ -877,7 +1071,127 @@ function handleError(err) {
   }
 }
 
-// ============ Инициализация ============
+// ============================================================
+// ==================== КАРТА ОСАДКОВ ========================
+// ============================================================
+const radarMapEl = document.getElementById('radar-map');
+const radarPlayBtn = document.getElementById('radar-play');
+const radarPrevBtn = document.getElementById('radar-prev');
+const radarNextBtn = document.getElementById('radar-next');
+const radarTimeEl = document.getElementById('radar-time');
+
+let radarMap = null;
+let radarTileLayer = null;
+let radarFrames = [];
+let radarFrameIndex = 0;
+let radarAnimInterval = null;
+let radarHost = '';
+
+function initRadarMap() {
+  if (radarMap) return;
+  
+  radarMap = L.map(radarMapEl, {
+    zoomControl: true,
+    attributionControl: true,
+  }).setView([55.75, 37.61], 6);
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_4i7d_1_d1b9e9fd9ed29317ae222d4c', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: 'abcd'
+  }).addTo(radarMap);
+}
+
+async function loadRadarFrames() {
+  try {
+    const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+    if (!res.ok) throw new Error('radarFrames');
+
+    const data = await res.json();
+    radarHost = data.host;
+
+    radarFrames = data.radar.past.map((f) => ({
+      path: f.path,
+      time: f.time,
+    }));
+
+    radarFrameIndex = radarFrames.length - 1;
+    updateRadarFrame();
+  } catch (err) {
+    console.warn('Не удалось загрузить радар:', err);
+  }
+}
+
+function updateRadarFrame() {
+  if (!radarMap || radarFrames.length === 0) return;
+
+  const frame = radarFrames[radarFrameIndex];
+  if (currentZoom > 7) {
+    if (radarTileLayer) {
+      radarMap.removeLayer(radarTileLayer);
+      radarTileLayer = null;
+    }
+    return;
+  }
+  if (radarTileLayer) {
+    radarMap.removeLayer(radarTileLayer);
+  }
+
+  radarTileLayer = L.tileLayer(`${radarHost}${frame.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+    opacity: 0.65,
+    transparent: true,
+    attribution: 'Radar © RainViewer',
+  }).addTo(radarMap);
+
+  const d = new Date(frame.time * 1000);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  radarTimeEl.textContent = `${hh}:${mm}`;
+}
+
+function moveRadarTo(lat, lon) {
+  if (!radarMap) return;
+  radarMap.setView([lat, lon], 7, { animate: true });
+}
+
+function playRadar() {
+  if (radarAnimInterval) return;
+
+  radarPlayBtn.textContent = '⏸';
+  radarAnimInterval = setInterval(() => {
+    radarFrameIndex = (radarFrameIndex + 1) % radarFrames.length;
+    updateRadarFrame();
+  }, 500);
+}
+
+function pauseRadar() {
+  if (radarAnimInterval) {
+    clearInterval(radarAnimInterval);
+    radarAnimInterval = null;
+  }
+  radarPlayBtn.textContent = '▶';
+}
+
+radarPlayBtn.addEventListener('click', () => {
+  if (radarAnimInterval) pauseRadar();
+  else playRadar();
+});
+
+radarPrevBtn.addEventListener('click', () => {
+  pauseRadar();
+  radarFrameIndex = (radarFrameIndex - 1 + radarFrames.length) % radarFrames.length;
+  updateRadarFrame();
+});
+
+radarNextBtn.addEventListener('click', () => {
+  pauseRadar();
+  radarFrameIndex = (radarFrameIndex + 1) % radarFrames.length;
+  updateRadarFrame();
+});
+
+// ============================================================
+// ==================== ИНИЦИАЛИЗАЦИЯ ========================
+// ============================================================
 function applyUnitButton() {
   unitsEl.querySelectorAll('.units__btn').forEach((b) => {
     b.classList.toggle('units__btn--active', b.dataset.unit === currentUnit);
@@ -906,7 +1220,12 @@ async function restoreLastCity() {
   }
 }
 
+// Старт приложения
 applyTranslations();
 applyUnitButton();
 renderFavorites();
+
+initRadarMap();
+loadRadarFrames();
+
 restoreLastCity();
