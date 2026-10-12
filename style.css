@@ -103,6 +103,7 @@ body[data-theme="fog-night"]    { --bg-from: #485563; --bg-to: #29323c; }
 
 /* ====== Поиск ====== */
 .search {
+  position: relative;
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
@@ -580,4 +581,45 @@ body[data-theme="fog-night"]    { --bg-from: #485563; --bg-to: #29323c; }
 
 .radar__attribution a {
   color: inherit;
+}
+.suggestions {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  max-height: 240px;
+  overflow-y: auto;
+  margin-top: -8px;
+}
+
+.suggestions--visible {
+  display: block;
+}
+
+.suggestion-item {
+  padding: 12px 16px;
+  color: #222;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 15px;
+  transition: background 0.15s;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: rgba(74, 144, 226, 0.15);
+}
+
+.suggestion-item__country {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-left: 6px;
 }

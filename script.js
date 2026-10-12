@@ -177,6 +177,62 @@ function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     el.textContent = t(el.dataset.i18n);
   });
+  // ============ ПОДСКАЗКИ ПРИ ВВОДЕ ============
+const suggestionsEl = document.getElementById('suggestions');
+let suggestTimer = null;
+
+// Debounce — ждём паузу в наборе, чтобы не дёргать API на каждую букву
+input.addEventListener('input', () => {
+  clearTimeout(suggestTimer);
+
+  const query = input.value.trim();
+  if (query.length < 2) {
+    hideSuggestions();
+    return;
+  }
+
+  suggestTimer = setTimeout(async () => {
+    try {
+      const results = await geocode(query, 6);
+      showSuggestions(results);
+    } catch (err) {
+      hideSuggestions();
+    }
+  }, 300);
+});
+
+// Скрываем подсказки при клике вне
+document.addEventListener('click', (e) => {
+  if (!form.contains(e.target) && !suggestionsEl.contains(e.target)) {
+    hideSuggestions();
+  }
+});
+
+function showSuggestions(results) {
+  suggestionsEl.innerHTML = '';
+
+  results.forEach((r) => {
+    const cityName = r.country ? `${r.name}, ${r.country}` : r.name;
+    const item = document.createElement('div');
+    item.className = 'suggestion-item';
+    item.innerHTML = `${r.name}<span class="suggestion-item__country">${r.country || ''}</span>`;
+    item.addEventListener('click', () => {
+      input.value = r.name;
+      hideSuggestions();
+      loadByCoords(r.latitude, r.longitude, cityName);
+      saveCity(r.name);
+      hint.textContent = t('hint.updated');
+    });
+    suggestionsEl.appendChild(item);
+  });
+
+  suggestionsEl.classList.add('suggestions--visible');
+}
+
+function hideSuggestions() {
+  suggestionsEl.classList.remove('suggestions--visible');
+  suggestionsEl.innerHTML = '';
+}
 
   document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
     el.placeholder = t(el.dataset.i18nPlaceholder);
@@ -766,8 +822,8 @@ function renderFavorites() {
 // ============================================================
 // ==================== ГЕОКОДИНГ =============================
 // ============================================================
-async function geocode(cityName) {
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=${currentLang}&format=json`;
+async function geocode(cityName, count = 5) {
+  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=${count}&language=${currentLang}&format=json`;
 
   const res = await fetch(url);
   if (!res.ok) throw new Error('geocode');
@@ -779,8 +835,7 @@ async function geocode(cityName) {
     throw err;
   }
 
-  const { latitude, longitude, name, country } = data.results[0];
-  return { lat: latitude, lon: longitude, name, country };
+  return data.results; // массив результатов
 }
 
 async function reverseGeocode(lat, lon) {
@@ -995,6 +1050,7 @@ favBtn.addEventListener('click', () => {
 // ============================================================
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  hideSuggestions();
 
   const query = input.value.trim();
   if (!query) {
@@ -1005,7 +1061,22 @@ form.addEventListener('submit', async (e) => {
   hint.textContent = t('hint.loading');
 
   try {
-    await loadByCityName(query);
+    const results = await geocode(query, 6);
+
+    // Если найдено больше одного — показываем подсказки для выбора
+    if (results.length > 1) {
+      showSuggestions(results);
+      hint.textContent = currentLang === 'en'
+        ? 'Select a city from the list'
+        : 'Выберите город из списка';
+      return;
+    }
+
+    // Один результат — грузим сразу
+    const r = results[0];
+    const cityName = r.country ? `${r.name}, ${r.country}` : r.name;
+    await loadByCoords(r.latitude, r.longitude, cityName);
+    saveCity(r.name);
     hint.textContent = t('hint.updated');
   } catch (err) {
     handleError(err);
